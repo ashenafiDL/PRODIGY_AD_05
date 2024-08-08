@@ -1,11 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:share_plus/share_plus.dart';
 
 class ResBaseWidget extends StatelessWidget {
-  const ResBaseWidget({super.key, required this.icon, required this.content});
+  const ResBaseWidget({
+    super.key,
+    required this.icon,
+    required this.content,
+    required this.onCopy,
+    required this.onShare,
+  });
 
   final IconData icon;
   final Widget content;
+  final VoidCallback onCopy;
+  final VoidCallback onShare;
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +28,21 @@ class ResBaseWidget extends StatelessWidget {
           child: CircleAvatar(child: Icon(icon)),
         ),
         const SizedBox(height: 24.0),
-        content
+        content,
+        const SizedBox(height: 24.0),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconButton(
+              onPressed: onCopy,
+              icon: const Icon(Icons.copy_rounded),
+            ),
+            IconButton(
+              onPressed: onShare,
+              icon: const Icon(Icons.share_rounded),
+            ),
+          ],
+        )
       ],
     );
   }
@@ -31,11 +55,22 @@ class ResGeoPoint extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final String data = 'lat:${geoPoint?.latitude},long:${geoPoint?.longitude}';
+
     return ResBaseWidget(
       icon: Icons.location_on_rounded,
       content: geoPoint != null
           ? _buildLocationInfo()
           : const Text('No location found'),
+      onCopy: () {
+        Clipboard.setData(ClipboardData(text: data));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Copied to clipboard!')),
+        );
+      },
+      onShare: () {
+        Share.share(data);
+      },
     );
   }
 
@@ -74,12 +109,57 @@ class ResContactInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final String data = _parseContactInfo(contactInfo!);
     return ResBaseWidget(
       icon: Icons.person_rounded,
       content: contactInfo != null
           ? _buildContactInfo()
           : const Text('No contact found'),
+      onCopy: () {
+        Clipboard.setData(ClipboardData(text: data));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Copied to clipboard!')),
+        );
+      },
+      onShare: () {
+        Share.share(data);
+      },
     );
+  }
+
+  String _parseContactInfo(ContactInfo contactInfo) {
+    final StringBuffer buffer = StringBuffer();
+
+    if (contactInfo.title != null) {
+      buffer.writeln('title:${contactInfo.title}');
+    }
+    if (contactInfo.name != null) {
+      buffer
+          .writeln('name:${contactInfo.name?.first} ${contactInfo.name?.last}');
+    }
+    if (contactInfo.organization != null) {
+      buffer.writeln('organization:${contactInfo.organization}');
+    }
+    if (contactInfo.addresses.isNotEmpty) {
+      buffer.write('address:');
+      for (var address in contactInfo.addresses) {
+        buffer.write(address.addressLines.join(', '));
+      }
+      buffer.writeln();
+    }
+    if (contactInfo.phones.isNotEmpty) {
+      buffer.write('phone:');
+      buffer
+          .writeln(contactInfo.phones.map((phone) => phone.number).join(', '));
+      buffer.writeln();
+    }
+    if (contactInfo.urls.isNotEmpty) {
+      buffer.write('URL:');
+      buffer.writeln(contactInfo.urls.join(', '));
+      buffer.writeln();
+    }
+
+    return buffer.toString();
   }
 
   Widget _buildContactInfo() {
@@ -130,9 +210,19 @@ class ResEmail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final String data = _parseEmailInfo(email!);
     return ResBaseWidget(
       icon: Icons.email_rounded,
       content: email != null ? _buildEmail() : const Text('No email found'),
+      onCopy: () {
+        Clipboard.setData(ClipboardData(text: data));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Copied to clipboard!')),
+        );
+      },
+      onShare: () {
+        Share.share(data);
+      },
     );
   }
 
@@ -163,6 +253,22 @@ class ResEmail extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  String _parseEmailInfo(Email email) {
+    final StringBuffer buffer = StringBuffer();
+
+    if (email.address != null) {
+      buffer.writeln('address:${email.address}');
+    }
+    if (email.subject != null) {
+      buffer.writeln('subject:${email.subject}');
+    }
+    if (email.body != null) {
+      buffer.writeln('body:${email.body}');
+    }
+
+    return buffer.toString();
   }
 }
 
@@ -203,6 +309,15 @@ class ResText extends StatelessWidget {
               ],
             )
           : const Text('No text found'),
+      onCopy: () {
+        Clipboard.setData(ClipboardData(text: value!));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Copied to clipboard!')),
+        );
+      },
+      onShare: () {
+        Share.share(value!);
+      },
     );
   }
 }
@@ -212,11 +327,13 @@ class ResError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const ResBaseWidget(
+    return ResBaseWidget(
       icon: Icons.error_rounded,
-      content: Center(
+      content: const Center(
         child: Text('This type of QR code is not supported'),
       ),
+      onCopy: () {},
+      onShare: () {},
     );
   }
 }
