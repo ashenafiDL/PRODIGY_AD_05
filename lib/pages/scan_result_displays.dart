@@ -166,16 +166,24 @@ class ResContactInfo extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Expanded(
+        Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text('Title:', style: TextStyle(color: Colors.grey)),
-              Text('Name:', style: TextStyle(color: Colors.grey)),
-              Text('organization:', style: TextStyle(color: Colors.grey)),
-              Text('Address:', style: TextStyle(color: Colors.grey)),
-              Text('Phone:', style: TextStyle(color: Colors.grey)),
-              Text('URLs:', style: TextStyle(color: Colors.grey)),
+              if (contactInfo!.title!.isNotEmpty)
+                const Text('Title:', style: TextStyle(color: Colors.grey)),
+              if (contactInfo!.name!.first!.isNotEmpty ||
+                  contactInfo!.name!.last!.isNotEmpty)
+                const Text('Name:', style: TextStyle(color: Colors.grey)),
+              if (contactInfo!.organization!.isNotEmpty)
+                const Text('organization:',
+                    style: TextStyle(color: Colors.grey)),
+              if (contactInfo!.addresses.isNotEmpty)
+                const Text('Address:', style: TextStyle(color: Colors.grey)),
+              if (contactInfo!.phones.isNotEmpty)
+                const Text('Phone:', style: TextStyle(color: Colors.grey)),
+              if (contactInfo!.urls.isNotEmpty)
+                const Text('URLs:', style: TextStyle(color: Colors.grey)),
             ],
           ),
         ),
@@ -184,9 +192,12 @@ class ResContactInfo extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('${contactInfo?.title}'),
-              Text('${contactInfo?.name?.first} ${contactInfo!.name?.last}'),
-              Text('${contactInfo?.organization}'),
+              if (contactInfo!.title!.isNotEmpty) Text('${contactInfo?.title}'),
+              if (contactInfo!.name!.first!.isNotEmpty ||
+                  contactInfo!.name!.last!.isNotEmpty)
+                Text('${contactInfo?.name?.first}${contactInfo!.name?.last}'),
+              if (contactInfo!.organization!.isNotEmpty)
+                Text('${contactInfo?.organization}'),
               if (contactInfo!.addresses.isNotEmpty)
                 ...contactInfo!.addresses.expand(
                   (address) => address.addressLines.map((line) => Text(line)),
